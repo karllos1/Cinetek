@@ -124,6 +124,8 @@
     <button class="menu-item" onclick="buscarGen(27, 'movie')">💀 Terror</button>
     <button class="menu-item" onclick="buscarGen(35, 'movie')">😂 Comédia</button>
     <button class="menu-item" onclick="buscarGen(16, 'movie')">🎨 Desenhos</button>
+    <button class="menu-item" onclick="buscarGen(10749, 'movie')">💖 Romance</button>
+    <button class="menu-item" onclick="buscarGen(878, 'movie')">🚀 Ficção</button>
 </div>
 
 <div id="detalhes-page">
@@ -151,14 +153,24 @@
 <div id="admin-modal" class="modal-admin">
     <div class="admin-box">
         <button class="close-admin" onclick="fecharAdmin()">✕</button>
+        
         <div id="adm-login-area">
             <h2 style="text-align:center">Painel Admin</h2>
             <input type="text" id="adm-user" class="admin-input" placeholder="Usuário">
             <input type="password" id="adm-pass" class="admin-input" placeholder="Senha">
             <button onclick="login()" class="btn-play" style="width:100%; justify-content:center;">ENTRAR</button>
         </div>
+
         <div id="adm-painel" style="display:none;">
-            <h3>Publicar Conteúdo</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h3 style="margin:0;">Dashboard</h3>
+                <button onclick="location.reload()" style="color:red; background:none; border:none; cursor:pointer; font-weight: bold;">SAIR</button>
+            </div>
+            
+            <input type="password" id="new-pass" class="admin-input" placeholder="Nova Senha">
+            <button onclick="trocarSenha()" style="width:100%; padding:10px; background:var(--red); border:none; color:white; border-radius:5px; margin-bottom:15px; cursor: pointer;">MUDAR SENHA</button>
+            <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
+
             <div style="display:flex; gap:10px; margin-bottom:10px;">
                 <button onclick="setTipo('movie')" id="btn-m" style="flex:1; padding:10px; background:var(--red); color:white; border:none;">FILME</button>
                 <button onclick="setTipo('tv')" id="btn-t" style="flex:1; padding:10px; background:#333; color:white; border:none;">SÉRIE</button>
@@ -168,10 +180,10 @@
             
             <div id="campos-serie" style="display:none; background:#222; padding:10px; border-radius:8px; margin-bottom:10px;">
                 <input type="number" id="ed-temp" class="admin-input" placeholder="Temporada (Ex: 1)">
-                <input type="number" id="ed-ep" class="admin-input" placeholder="Episódio (Ex: 5)">
+                <input type="number" id="ed-ep" class="admin-input" placeholder="Episódio (Ex: 1)">
             </div>
 
-            <input type="text" id="ed-link" class="admin-input" placeholder="Link do Vídeo (.mp4 ou embed)">
+            <input type="text" id="ed-link" class="admin-input" placeholder="Link do Vídeo">
             <button onclick="salvar()" class="btn-play" style="width:100%; justify-content:center;">PUBLICAR GLOBALMENTE</button>
         </div>
     </div>
@@ -188,7 +200,11 @@
         try {
             const r = await fetch(DATABASE_URL);
             const dados = await r.json();
-            if (dados) { db = dados; render(db.recentes || [], 'grid-recentes'); }
+            if (dados) { 
+                db = dados; 
+                if(!db.config) db.config = {user:'admin', pass:'1234'};
+                render(db.recentes || [], 'grid-recentes'); 
+            }
         } catch (e) { console.error("Erro banco"); }
     }
 
@@ -203,6 +219,45 @@
         render(d.results, 'main-grid'); startSlider();
     }
 
+    function login() {
+        if(document.getElementById('adm-user').value === db.config.user && document.getElementById('adm-pass').value === db.config.pass) {
+            document.getElementById('adm-login-area').style.display = 'none'; document.getElementById('adm-painel').style.display = 'block';
+        } else alert("Acesso negado!");
+    }
+
+    async function trocarSenha() {
+        const nova = document.getElementById('new-pass').value;
+        if(nova.length < 4) return alert("Senha muito curta!");
+        db.config.pass = nova;
+        await salvarNaNuvem();
+        alert("Senha alterada com sucesso!");
+    }
+
+    async function salvar() {
+        const link = document.getElementById('ed-link').value; if(!selecionado || !link) return alert("Faltam dados!");
+        const tipo = selecionado.name ? 'tv' : 'movie';
+        if(!db[tipo]) db[tipo] = {};
+
+        if(tipo === 'movie') {
+            db.movie[selecionado.id] = { ...selecionado, link: link };
+        } else {
+            const s = document.getElementById('ed-temp').value;
+            const e = document.getElementById('ed-ep').value;
+            if(!s || !e) return alert("Informe Temporada e Episódio!");
+            if(!db.tv[selecionado.id]) db.tv[selecionado.id] = { ...selecionado, eps: {} };
+            if(!db.tv[selecionado.id].eps) db.tv[selecionado.id].eps = {};
+            db.tv[selecionado.id].eps[`s${s}e${e}`] = link;
+        }
+
+        db.recentes = db.recentes.filter(x => x.id != selecionado.id);
+        db.recentes.unshift(selecionado);
+        if(db.recentes.length > 20) db.recentes.pop();
+
+        await salvarNaNuvem();
+        alert("Publicado!"); location.reload();
+    }
+
+    // --- FUNÇÕES DE INTERFACE ---
     function startSlider() {
         let idx = 0; setInterval(() => {
             const m = sliderItems[idx]; if(m) {
@@ -229,7 +284,7 @@
         document.getElementById('det-tit').innerText = m.title || m.name;
         document.getElementById('det-poster').src = `https://image.tmdb.org/t/p/w500${m.poster_path}`;
         document.getElementById('det-meta').innerText = `⭐ ${m.vote_average.toFixed(1)} | ${m.release_date || m.first_air_date || ""}`;
-        document.getElementById('det-sinopse').innerText = m.overview || "Sinopse não disponível.";
+        document.getElementById('det-sinopse').innerText = m.overview || "Sem sinopse.";
         
         const pBox = document.getElementById('player-box'); const sArea = document.getElementById('series-area'); const btnPlay = document.getElementById('btn-play-trigger');
         pBox.style.display = 'none'; sArea.style.display = 'none';
@@ -243,7 +298,7 @@
                     pBox.style.display = 'block'; 
                     document.getElementById('main-video').src = db.movie[m.id].link; 
                     btnPlay.style.display = 'none';
-                } else alert("Em breve!");
+                } else alert("Link indisponível.");
             };
         }
         const rs = await fetch(`https://api.themoviedb.org/3/${tipo}/${m.id}/similar?api_key=${API_KEY}&language=pt-BR`);
@@ -261,14 +316,11 @@
         const s = document.getElementById('select-temp').value;
         const r = await fetch(`https://api.themoviedb.org/3/tv/${selecionado.id}/season/${s}?api_key=${API_KEY}&language=pt-BR`);
         const d = await r.json();
-        
         const listaHTML = d.episodes.map(e => {
             const idEp = `s${s}e${e.episode_number}`;
             const linkOk = db.tv && db.tv[selecionado.id] && db.tv[selecionado.id].eps && db.tv[selecionado.id].eps[idEp];
-            const classe = linkOk ? "" : "bloqueado";
-            return `<div class="ep-card ${classe}" onclick="tocarEp('${selecionado.id}', '${idEp}')"><b>EP ${e.episode_number}</b> - ${e.name} ${linkOk ? "▶" : "🔒"}</div>`;
+            return `<div class="ep-card ${linkOk ? "" : "bloqueado"}" onclick="tocarEp('${selecionado.id}', '${idEp}')"><b>EP ${e.episode_number}</b> - ${e.name} ${linkOk ? "▶" : "🔒"}</div>`;
         }).join('');
-        
         document.getElementById('ep-list').innerHTML = listaHTML;
     }
 
@@ -277,41 +329,7 @@
             document.getElementById('player-box').style.display = 'block'; 
             document.getElementById('main-video').src = db.tv[idSerie].eps[idEp]; 
             document.getElementById('main-video').play();
-        } else alert("Episódio ainda não disponível.");
-    }
-
-    function login() {
-        if(document.getElementById('adm-user').value === db.config.user && document.getElementById('adm-pass').value === db.config.pass) {
-            document.getElementById('adm-login-area').style.display = 'none'; document.getElementById('adm-painel').style.display = 'block';
-        } else alert("Acesso negado!");
-    }
-
-    async function salvar() {
-        const link = document.getElementById('ed-link').value; if(!selecionado || !link) return alert("Faltam dados!");
-        const tipo = selecionado.name ? 'tv' : 'movie';
-        
-        if(!db[tipo]) db[tipo] = {};
-
-        if(tipo === 'movie') {
-            db.movie[selecionado.id] = { ...selecionado, link: link };
-        } else {
-            const s = document.getElementById('ed-temp').value;
-            const e = document.getElementById('ed-ep').value;
-            if(!s || !e) return alert("Informe Temporada e Episódio!");
-            
-            if(!db.tv[selecionado.id]) db.tv[selecionado.id] = { ...selecionado, eps: {} };
-            if(!db.tv[selecionado.id].eps) db.tv[selecionado.id].eps = {};
-            
-            const idEp = `s${s}e${e.episode_number || e}`;
-            db.tv[selecionado.id].eps[idEp] = link;
-        }
-
-        db.recentes = db.recentes.filter(x => x.id != selecionado.id);
-        db.recentes.unshift(selecionado);
-        if(db.recentes.length > 20) db.recentes.pop();
-
-        await salvarNaNuvem();
-        alert("Publicado com Sucesso!"); location.reload();
+        } else alert("Em breve!");
     }
 
     function setTipo(t) { 
@@ -325,7 +343,7 @@
         const q = document.getElementById('adm-busca').value; if(q.length < 3) return;
         const r = await fetch(`https://api.themoviedb.org/3/search/${tipoAtual}?api_key=${API_KEY}&query=${q}&language=pt-BR`);
         const d = await r.json();
-        document.getElementById('res-busca-adm').innerHTML = d.results.map(m => `<div onclick='selecionado=${JSON.stringify(m).replace(/'/g, "")}; alert("Selecionado: "+(selecionado.title||selecionado.name))' style="padding:10px; cursor:pointer; border-bottom:1px solid #222;">${m.title || m.name}</div>`).join('');
+        document.getElementById('res-busca-adm').innerHTML = d.results.map(m => `<div onclick='selecionado=${JSON.stringify(m).replace(/'/g, "")}; alert("Selecionado!")' style="padding:10px; cursor:pointer; border-bottom:1px solid #222;">${m.title || m.name}</div>`).join('');
     }
 
     function toggleMenu(s) { document.getElementById('menu-lat').classList.toggle('active', s); }
