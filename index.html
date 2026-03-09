@@ -76,6 +76,10 @@
 
         .sinopse-container { font-size: 16px; line-height: 1.8; color: #eee; margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.5); border-radius: 10px; }
         .btn-play { background: var(--red); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        
+        /* BOTÃO FAVORITO */
+        .btn-fav { background: #222; color: white; border: 1px solid #444; padding: 12px 18px; border-radius: 50px; cursor: pointer; font-size: 20px; transition: 0.3s; margin-left: 10px; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-fav.active { color: #ff0000; border-color: #ff0000; }
 
         .modal-admin { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 10000; padding: 20px; overflow-y: auto; }
         .admin-box { background: #111; max-width: 450px; margin: 30px auto; padding: 25px; border-radius: 15px; border: 1px solid #333; position: relative; }
@@ -120,7 +124,8 @@
 
 <div id="menu-lat">
     <button onclick="toggleMenu(false)" style="color:var(--red); background:none; border:none; font-size:35px; cursor:pointer;">✕</button>
-    <button class="menu-item" onclick="buscarGen(0, 'all')">🏠 Página Inicial</button>
+    <button class="menu-item" onclick="location.reload()">🏠 Página Inicial</button>
+    <button class="menu-item" onclick="mostrarFavoritos()">❤️ Meus Favoritos</button>
     <button class="menu-item" onclick="buscarGen(0, 'movie')">🎬 Filmes</button>
     <button class="menu-item" onclick="buscarGen(0, 'tv')">📺 Séries</button>
     <button class="menu-item" onclick="buscarGen(28, 'movie')">💥 Ação</button>
@@ -140,7 +145,10 @@
             <p id="det-meta" style="color:var(--red); font-weight:bold; margin-top: 10px;"></p>
             <div id="det-views" style="font-size: 14px; color: #aaa; margin-top: 5px;">👁️ 0 visualizações</div>
             <div id="player-box" class="player-wrap"><video id="main-video" controls playsinline></video></div>
-            <div id="actions-area"><button id="btn-play-trigger" class="btn-play">▶ ASSISTIR AGORA</button></div>
+            <div id="actions-area" style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+                <button id="btn-play-trigger" class="btn-play">▶ ASSISTIR AGORA</button>
+                <button id="btn-fav-trigger" class="btn-fav" onclick="toggleFavorito()">♡</button>
+            </div>
             <div id="series-area" style="display:none; margin-top: 20px;">
                 <h3 style="margin-bottom: 10px;">Temporadas e Episódios</h3>
                 <select id="select-temp" class="admin-input" style="max-width: 200px;" onchange="carregarEpisodios()"></select>
@@ -238,14 +246,16 @@
     }
 
     function render(lista, container) {
-        const div = document.getElementById(container); div.innerHTML = "";
-        lista.forEach(m => {
-            if(!m.poster_path) return;
-            const card = document.createElement('div'); card.className = 'card';
-            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${m.poster_path}"><p>${m.title || m.name}</p>`;
-            card.onclick = () => abrirDet(m); div.appendChild(card);
-        });
-    }
+    const div = document.getElementById(container); 
+    if(!div) return; // Segurança caso o container não exista
+    div.innerHTML = ""; // Isso limpa o "Carregando..." ou filmes anteriores
+    lista.forEach(m => {
+        if(!m.poster_path) return;
+        const card = document.createElement('div'); card.className = 'card';
+        card.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${m.poster_path}"><p>${m.title || m.name}</p>`;
+        card.onclick = () => abrirDet(m); div.appendChild(card);
+    });
+}
 
    async function abrirDet(m) {
     selecionado = m; 
@@ -258,6 +268,15 @@
     document.getElementById('det-meta').innerText = `⭐ ${m.vote_average.toFixed(1)} | ${m.release_date || m.first_air_date || ""}`;
     document.getElementById('det-sinopse').innerText = m.overview || "Sinopse não disponível.";
     
+    // Lógica do botão de favoritos (Coração)
+    const favs = JSON.parse(localStorage.getItem('cinetek_favs') || '[]');
+    const isFav = favs.some(f => f.id == m.id);
+    const btnFav = document.getElementById('btn-fav-trigger');
+    if(btnFav) {
+        btnFav.innerHTML = isFav ? '❤️' : '♡';
+        btnFav.classList.toggle('active', isFav);
+    }
+
     const views = (db[tipo] && db[tipo][m.id] && db[tipo][m.id].views) ? db[tipo][m.id].views : 0;
     document.getElementById('det-views').innerText = `👁️ ${views} visualizações`;
 
@@ -303,94 +322,157 @@
     }
 
     async function carregarEpisodios() {
-    const s = document.getElementById('select-temp').value;
-    const r = await fetch(`https://api.themoviedb.org/3/tv/${selecionado.id}/season/${s}?api_key=${API_KEY}&language=pt-BR`);
-    const d = await r.json();
-    document.getElementById('ep-list').innerHTML = d.episodes.map(e => `
-        <div class="ep-card" onclick="tocarEp('${selecionado.id}', '${s}', '${e.episode_number}')">
-            <b>EP ${e.episode_number}</b> - ${e.name}
-        </div>
-    `).join('');
-}
-
-async function registrarView(id, tipo) {
-    if (!db[tipo] || !db[tipo][id]) return;
-    if (!db[tipo][id].views) db[tipo][id].views = 0;
-    db[tipo][id].views += 1;
-    document.getElementById('det-views').innerText = `👁️ ${db[tipo][id].views} visualizações`;
-    await salvarNaNuvem();
-}
-
-function tocarEp(idSerie, numTemp, numEp) {
-    if (db.tv && db.tv[idSerie] && db.tv[idSerie].temporadas && 
-        db.tv[idSerie].temporadas[numTemp] && db.tv[idSerie].temporadas[numTemp][numEp]) {
-        
-        const linkEp = db.tv[idSerie].temporadas[numTemp][numEp];
-        const pBox = document.getElementById('player-box');
-        const video = document.getElementById('main-video');
-
-        pBox.style.display = 'block';
-        video.src = linkEp;
-        video.play();
-        pBox.scrollIntoView({ behavior: 'smooth' });
-        
-        registrarView(idSerie, 'tv');
-    } else {
-        alert("O link para este episódio ainda não foi cadastrado.");
+        const s = document.getElementById('select-temp').value;
+        const r = await fetch(`https://api.themoviedb.org/3/tv/${selecionado.id}/season/${s}?api_key=${API_KEY}&language=pt-BR`);
+        const d = await r.json();
+        document.getElementById('ep-list').innerHTML = d.episodes.map(e => `
+            <div class="ep-card" onclick="tocarEp('${selecionado.id}', '${s}', '${e.episode_number}')">
+                <b>EP ${e.episode_number}</b> - ${e.name}
+            </div>
+        `).join('');
     }
-}
 
-// LÓGICA CONTINUAR ASSISTINDO
-const videoElement = document.getElementById('main-video');
-videoElement.ontimeupdate = () => {
-    if (videoElement.currentTime > 10 && selecionado) {
-        salvarProgresso(selecionado, videoElement.currentTime);
+    async function registrarView(id, tipo) {
+        if (!db[tipo] || !db[tipo][id]) return;
+        if (!db[tipo][id].views) db[tipo][id].views = 0;
+        db[tipo][id].views += 1;
+        document.getElementById('det-views').innerText = `👁️ ${db[tipo][id].views} visualizações`;
+        await salvarNaNuvem();
     }
-};
 
-function salvarProgresso(m, tempo) {
-    let progresso = JSON.parse(localStorage.getItem('cinetek_progresso') || '{}');
-    progresso[m.id] = { item: m, tempo: tempo, timestamp: Date.now() };
-    localStorage.setItem('cinetek_progresso', JSON.stringify(progresso));
-}
+    function tocarEp(idSerie, numTemp, numEp) {
+        if (db.tv && db.tv[idSerie] && db.tv[idSerie].temporadas && 
+            db.tv[idSerie].temporadas[numTemp] && db.tv[idSerie].temporadas[numTemp][numEp]) {
+            
+            const linkEp = db.tv[idSerie].temporadas[numTemp][numEp];
+            const pBox = document.getElementById('player-box');
+            const video = document.getElementById('main-video');
 
-function renderContinuar() {
-    const lista = JSON.parse(localStorage.getItem('cinetek_progresso') || '{}');
-    const container = document.getElementById('grid-continuar');
-    const section = document.getElementById('section-continuar');
-    const itens = Object.values(lista).sort((a, b) => b.timestamp - a.timestamp).slice(0, 4);
+            pBox.style.display = 'block';
+            video.src = linkEp;
+            video.play();
+            pBox.scrollIntoView({ behavior: 'smooth' });
+            
+            registrarView(idSerie, 'tv');
+        } else {
+            alert("O link para este episódio ainda não foi cadastrado.");
+        }
+    }
+
+    // LÓGICA FAVORITOS
+    function toggleFavorito() {
+        let favs = JSON.parse(localStorage.getItem('cinetek_favs') || '[]');
+        const idx = favs.findIndex(f => f.id == selecionado.id);
+        const btnFav = document.getElementById('btn-fav-trigger');
+
+        if(idx > -1) {
+            favs.splice(idx, 1);
+            btnFav.innerHTML = '♡';
+            btnFav.classList.remove('active');
+        } else {
+            favs.push(selecionado);
+            btnFav.innerHTML = '❤️';
+            btnFav.classList.add('active');
+        }
+        localStorage.setItem('cinetek_favs', JSON.stringify(favs));
+    }
+
+    function mostrarFavoritos() {
+    toggleMenu(false); 
+    const favs = JSON.parse(localStorage.getItem('cinetek_favs') || '[]');
     
-    if (itens.length > 0 && container && section) {
-        section.style.display = 'block';
-        container.innerHTML = "";
-        itens.forEach(p => {
+    const container = document.getElementById('main-grid');
+    const mainTit = document.getElementById('main-tit');
+    
+    // 1. Forçar a limpeza e exibição do container principal
+    container.innerHTML = "";
+    mainTit.innerText = "❤️ MEUS FAVORITOS";
+    mainTit.parentElement.style.display = "block"; // Garante que a seção principal apareça
+
+    // 2. Esconder TUDO que não interessa na página de favoritos
+    document.getElementById('hero-slider').style.display = 'none';
+    
+    const secCont = document.getElementById('section-continuar');
+    if(secCont) secCont.style.display = 'none';
+    
+    // Esconde o título e a grade dos "Recentes"
+    const recGrid = document.getElementById('grid-recentes');
+    if(recGrid) {
+        recGrid.style.display = 'none';
+        // Seleciona o h2 que vem antes do grid-recentes e esconde
+        if(recGrid.previousElementSibling) recGrid.previousElementSibling.style.display = 'none';
+    }
+
+    // 3. Renderizar ou mostrar aviso de vazio
+    if(favs.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                <p style="font-size: 1.2rem; color: #666;">Sua lista de favoritos está vazia.</p>
+                <button onclick="location.reload()" style="margin-top:20px; background:var(--red); color:white; border:none; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold;">VOLTAR AO INÍCIO</button>
+            </div>`;
+    } else {
+        // Chamada manual da renderização para garantir que use o container certo
+        favs.forEach(m => {
             const card = document.createElement('div');
             card.className = 'card';
-            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${p.item.poster_path}"><p>▶ ${p.item.title || p.item.name}</p>`;
-            
-            card.onclick = async () => {
-                await abrirDet(p.item); // Abre a página do filme
-                
-                const v = document.getElementById('main-video');
-                const pBox = document.getElementById('player-box');
-
-                // Se for filme, já prepara o link
-                if(!p.item.name) {
-                    v.src = db.movie[p.item.id].link;
-                    pBox.style.display = 'block';
-                    document.getElementById('btn-play-trigger').style.display = 'none';
-                }
-
-                // O SEGREDO: Só muda o tempo quando o vídeo carregar os metadados
-                v.onloadedmetadata = () => {
-                    v.currentTime = p.tempo;
-                    v.play();
-                };
-            };
+            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${m.poster_path}"><p>${m.title || m.name}</p>`;
+            card.onclick = () => abrirDet(m);
             container.appendChild(card);
         });
     }
+    
+    window.scrollTo(0, 0);
 }
+
+    // LÓGICA CONTINUAR ASSISTINDO
+    const videoElement = document.getElementById('main-video');
+    videoElement.ontimeupdate = () => {
+        if (videoElement.currentTime > 10 && selecionado) {
+            salvarProgresso(selecionado, videoElement.currentTime);
+        }
+    };
+
+    function salvarProgresso(m, tempo) {
+        let progresso = JSON.parse(localStorage.getItem('cinetek_progresso') || '{}');
+        progresso[m.id] = { item: m, tempo: tempo, timestamp: Date.now() };
+        localStorage.setItem('cinetek_progresso', JSON.stringify(progresso));
+    }
+
+    function renderContinuar() {
+        const lista = JSON.parse(localStorage.getItem('cinetek_progresso') || '{}');
+        const container = document.getElementById('grid-continuar');
+        const section = document.getElementById('section-continuar');
+        const itens = Object.values(lista).sort((a, b) => b.timestamp - a.timestamp).slice(0, 4);
+        
+        if (itens.length > 0 && container && section) {
+            section.style.display = 'block';
+            container.innerHTML = "";
+            itens.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${p.item.poster_path}"><p>▶ ${p.item.title || p.item.name}</p>`;
+                
+                card.onclick = async () => {
+                    await abrirDet(p.item); 
+                    
+                    const v = document.getElementById('main-video');
+                    const pBox = document.getElementById('player-box');
+
+                    if(!p.item.name) {
+                        v.src = db.movie[p.item.id].link;
+                        pBox.style.display = 'block';
+                        document.getElementById('btn-play-trigger').style.display = 'none';
+                    }
+
+                    v.onloadedmetadata = () => {
+                        v.currentTime = p.tempo;
+                        v.play();
+                    };
+                };
+                container.appendChild(card);
+            });
+        }
+    }
 
     function login() {
         if(document.getElementById('adm-user').value === db.config.user && document.getElementById('adm-pass').value === db.config.pass) {
