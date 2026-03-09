@@ -160,9 +160,18 @@
 
         <div id="adm-painel" style="display:none;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
-        <h3 style="margin:0;">Dashboard</h3>
+    <h3 style="margin:0;">Dashboard</h3>
+    <div style="display:flex; gap:10px;">
+        <button onclick="toggleTrocarSenha()" style="background:none; border:1px solid #444; color:#aaa; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">🔑 Senha</button>
         <button onclick="location.reload()" style="color:var(--red); background:none; border:none; cursor:pointer; font-weight: bold;">SAIR</button>
     </div>
+</div>
+
+<div id="area-trocar-senha" style="display:none; background:#1a1a1a; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid var(--red);">
+    <p style="font-size:12px; color:#fff; margin-bottom:10px;">Nova Senha Admin:</p>
+    <input type="text" id="nova-senha-input" class="admin-input" placeholder="Digite a nova senha">
+    <button onclick="confirmarTrocaSenha()" class="btn-play" style="width:100%; padding:10px; font-size:12px;">SALVAR NOVA SENHA</button>
+</div>
     
     <div style="display:flex; gap:10px; margin-bottom:20px;">
         <button onclick="setTipo('movie')" id="btn-m" style="flex:1; padding:12px; background:var(--red); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">🎬 FILMES</button>
@@ -480,6 +489,35 @@ async function salvar() {
     document.getElementById('ed-link').value = "";
     document.getElementById('adm-ep').value = "";
     atualizarListaRemover();
+}
+// Abre e fecha a janelinha de troca de senha
+function toggleTrocarSenha() {
+    const area = document.getElementById('area-trocar-senha');
+    area.style.display = area.style.display === 'none' ? 'block' : 'none';
+}
+
+// Salva a nova senha no Firebase
+async function confirmarTrocaSenha() {
+    const novaSenha = document.getElementById('nova-senha-input').value;
+    
+    if (novaSenha.length < 4) {
+        return alert("A senha deve ter pelo menos 4 caracteres!");
+    }
+
+    if (confirm("Tem certeza que deseja mudar a senha do painel?")) {
+        // Atualiza a senha no objeto db
+        db.config.pass = novaSenha;
+        
+        try {
+            // Salva o banco inteiro atualizado na nuvem
+            await salvarNaNuvem();
+            alert("Senha alterada com sucesso! Use a nova senha no próximo login.");
+            toggleTrocarSenha(); // Fecha a área
+            document.getElementById('nova-senha-input').value = ""; // Limpa o campo
+        } catch (e) {
+            alert("Erro ao salvar nova senha.");
+        }
+    }
 }
 </script>
 </body>
