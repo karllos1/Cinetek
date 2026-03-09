@@ -149,28 +149,50 @@
 </div>
 
 <div id="admin-modal" class="modal-admin">
-    <div class="admin-box">
-        <button class="close-admin" onclick="fecharAdmin()">✕</button>
+    <div class="admin-box" style="max-width: 550px;"> <button class="close-admin" onclick="fecharAdmin()">✕</button>
+        
         <div id="adm-login-area">
-            <h2 style="text-align:center">Painel Admin</h2>
+            <h2 style="text-align:center; color: var(--red);">CINETEK ADMIN</h2>
             <input type="text" id="adm-user" class="admin-input" placeholder="Usuário">
             <input type="password" id="adm-pass" class="admin-input" placeholder="Senha" onkeyup="if(event.key==='Enter') login()">
             <button onclick="login()" class="btn-play" style="width:100%; justify-content:center;">ENTRAR</button>
         </div>
+
         <div id="adm-painel" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                <h3 style="margin:0;">Dashboard</h3>
-                <button onclick="location.reload()" style="color:red; background:none; border:none; cursor:pointer; font-weight: bold;">SAIR</button>
-            </div>
-            <div style="display:flex; gap:10px; margin-bottom:10px;">
-                <button onclick="setTipo('movie')" id="btn-m" style="flex:1; padding:10px; background:var(--red); color:white; border:none;">FILMES</button>
-                <button onclick="setTipo('tv')" id="btn-t" style="flex:1; padding:10px; background:#333; color:white; border:none;">SÉRIES</button>
-            </div>
-            <input type="text" id="adm-busca" class="admin-input" placeholder="Buscar no TMDB..." oninput="buscarTMDB()">
-            <div id="res-busca-adm" style="max-height:100px; overflow-y:auto; background:#000; margin-bottom:10px;"></div>
-            <input type="text" id="ed-link" class="admin-input" placeholder="Link do Vídeo">
-            <button onclick="salvar()" class="btn-play" style="width:100%; justify-content:center;">PUBLICAR GLOBALMENTE</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+        <h3 style="margin:0;">Dashboard</h3>
+        <button onclick="location.reload()" style="color:var(--red); background:none; border:none; cursor:pointer; font-weight: bold;">SAIR</button>
+    </div>
+    
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <button onclick="setTipo('movie')" id="btn-m" style="flex:1; padding:12px; background:var(--red); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">🎬 FILMES</button>
+        <button onclick="setTipo('tv')" id="btn-t" style="flex:1; padding:12px; background:#333; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">📺 SÉRIES</button>
+    </div>
+    
+    <div style="background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222;">
+        <p style="font-size: 11px; color: #888; margin: 0 0 8px 0;">1. BUSCAR NO TMDB:</p>
+        <input type="text" id="adm-busca" class="admin-input" placeholder="Ex: Suits..." oninput="buscarTMDB()">
+        <div id="res-busca-adm" style="max-height:150px; overflow-y:auto; background:#111; border-radius: 4px;"></div>
+    </div>
+    
+    <div id="sessao-links" style="background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222;">
+        <p style="font-size: 11px; color: #888; margin: 0 0 8px 0;">2. CONFIGURAR VÍDEO:</p>
+        
+        <div id="campos-serie" style="display:none; gap:10px; margin-bottom:10px;">
+            <input type="number" id="adm-temp" class="admin-input" placeholder="Temp" style="width:70px; margin-bottom:0;">
+            <input type="number" id="adm-ep" class="admin-input" placeholder="EP" style="width:70px; margin-bottom:0;">
         </div>
+
+        <input type="text" id="ed-link" class="admin-input" placeholder="Link .mp4 do vídeo" style="margin-bottom: 0;">
+    </div>
+
+    <button onclick="salvar()" class="btn-play" style="width:100%; justify-content:center; height: 50px; font-size: 16px;">🚀 PUBLICAR AGORA</button>
+
+    <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 15px;">
+        <h4 style="font-size:13px; color:#888; margin-bottom: 10px;">📂 CONTEÚDOS NO AR</h4>
+        <div id="lista-gerenciar" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+    </div>
+</div>
     </div>
 </div>
 
@@ -220,34 +242,57 @@
         });
     }
 
-    async function abrirDet(m) {
-        selecionado = m; const tipo = m.name ? 'tv' : 'movie';
-        const page = document.getElementById('detalhes-page');
-        page.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${m.backdrop_path})`;
-        document.getElementById('det-tit').innerText = m.title || m.name;
-        document.getElementById('det-poster').src = `https://image.tmdb.org/t/p/w500${m.poster_path}`;
-        document.getElementById('det-meta').innerText = `⭐ ${m.vote_average.toFixed(1)} | ${m.release_date || m.first_air_date || ""}`;
-        document.getElementById('det-sinopse').innerText = m.overview || "Sinopse não disponível.";
-        
-        const pBox = document.getElementById('player-box'); const sArea = document.getElementById('series-area'); const btnPlay = document.getElementById('btn-play-trigger');
-        pBox.style.display = 'none'; sArea.style.display = 'none';
+   async function abrirDet(m) {
+    selecionado = m; 
+    const tipo = m.name ? 'tv' : 'movie';
+    const page = document.getElementById('detalhes-page');
+    
+    // Configura o visual da página de detalhes
+    page.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${m.backdrop_path})`;
+    document.getElementById('det-tit').innerText = m.title || m.name;
+    document.getElementById('det-poster').src = `https://image.tmdb.org/t/p/w500${m.poster_path}`;
+    document.getElementById('det-meta').innerText = `⭐ ${m.vote_average.toFixed(1)} | ${m.release_date || m.first_air_date || ""}`;
+    document.getElementById('det-sinopse').innerText = m.overview || "Sinopse não disponível.";
+    
+    const pBox = document.getElementById('player-box'); 
+    const sArea = document.getElementById('series-area'); 
+    const btnPlay = document.getElementById('btn-play-trigger');
+    
+    // Reseta o player e área de séries
+    pBox.style.display = 'none'; 
+    sArea.style.display = 'none';
+    document.getElementById('main-video').src = "";
 
-        if(tipo === 'tv') {
-            btnPlay.style.display = 'none'; sArea.style.display = 'block'; carregarTemporadas(m.id);
-        } else {
-            btnPlay.style.display = 'inline-flex';
-            btnPlay.onclick = () => {
-                if(db.movie && db.movie[m.id]) { 
-                    pBox.style.display = 'block'; 
-                    document.getElementById('main-video').src = db.movie[m.id].link; 
-                    btnPlay.style.display = 'none';
-                } else alert("Link não cadastrado.");
-            };
-        }
-        const rs = await fetch(`https://api.themoviedb.org/3/${tipo}/${m.id}/similar?api_key=${API_KEY}&language=pt-BR`);
-        const ds = await rs.json(); render(ds.results.slice(0, 6), 'grid-semelhantes');
-        page.style.display = 'block'; page.scrollTo(0, 0);
+    if(tipo === 'tv') {
+        // Se for Série: Esconde botão de play e mostra seletor de temporadas
+        btnPlay.style.display = 'none'; 
+        sArea.style.display = 'block'; 
+        carregarTemporadas(m.id);
+    } else {
+        // Se for Filme: Mostra o botão de play
+        btnPlay.style.display = 'inline-flex';
+        btnPlay.onclick = () => {
+            // VERIFICAÇÃO IMPORTANTE: Olha dentro de db.movie se o ID existe
+            if(db.movie && db.movie[m.id] && db.movie[m.id].link) { 
+                pBox.style.display = 'block'; 
+                document.getElementById('main-video').src = db.movie[m.id].link; 
+                btnPlay.style.display = 'none';
+                // Rola a tela para o player automaticamente
+                pBox.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert("Este filme ainda não possui um link cadastrado.");
+            }
+        };
     }
+
+    // Carrega os títulos semelhantes (TMDB)
+    const rs = await fetch(`https://api.themoviedb.org/3/${tipo}/${m.id}/similar?api_key=${API_KEY}&language=pt-BR`);
+    const ds = await rs.json(); 
+    render(ds.results.slice(0, 6), 'grid-semelhantes');
+    
+    page.style.display = 'block'; 
+    page.scrollTo(0, 0);
+}
 
     async function carregarTemporadas(id) {
         const r = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=pt-BR`);
@@ -256,18 +301,38 @@
     }
 
     async function carregarEpisodios() {
-        const s = document.getElementById('select-temp').value;
-        const r = await fetch(`https://api.themoviedb.org/3/tv/${selecionado.id}/season/${s}?api_key=${API_KEY}&language=pt-BR`);
-        const d = await r.json();
-        document.getElementById('ep-list').innerHTML = d.episodes.map(e => `<div class="ep-card" onclick="tocarEp('${selecionado.id}')"><b>EP ${e.episode_number}</b> - ${e.name}</div>`).join('');
-    }
+    const s = document.getElementById('select-temp').value;
+    const r = await fetch(`https://api.themoviedb.org/3/tv/${selecionado.id}/season/${s}?api_key=${API_KEY}&language=pt-BR`);
+    const d = await r.json();
+    
+    // Agora passamos o ID da série, a Temporada e o Episódio para a função tocarEp
+    document.getElementById('ep-list').innerHTML = d.episodes.map(e => `
+        <div class="ep-card" onclick="tocarEp('${selecionado.id}', '${s}', '${e.episode_number}')">
+            <b>EP ${e.episode_number}</b> - ${e.name}
+        </div>
+    `).join('');
+}
 
-    function tocarEp(id) {
-        if(db.tv && db.tv[id]) { 
-            document.getElementById('player-box').style.display = 'block'; 
-            document.getElementById('main-video').src = db.tv[id].link; 
-        } else alert("Link não configurado.");
+    function tocarEp(idSerie, numTemp, numEp) {
+    // Busca no banco: db.tv -> ID da Série -> temporadas -> Número da Temp -> Número do EP
+    if (db.tv && db.tv[idSerie] && db.tv[idSerie].temporadas && 
+        db.tv[idSerie].temporadas[numTemp] && db.tv[idSerie].temporadas[numTemp][numEp]) {
+        
+        const linkEp = db.tv[idSerie].temporadas[numTemp][numEp];
+        const pBox = document.getElementById('player-box');
+        const video = document.getElementById('main-video');
+
+        pBox.style.display = 'block';
+        video.src = linkEp;
+        video.play(); // Tenta dar o play automático
+        
+        // Rola a tela para o vídeo para facilitar no celular
+        pBox.scrollIntoView({ behavior: 'smooth' });
+        
+    } else {
+        alert("O link para este episódio (Temp " + numTemp + " - EP " + numEp + ") ainda não foi cadastrado no Painel Admin.");
     }
+}
 
     function login() {
         if(document.getElementById('adm-user').value === db.config.user && document.getElementById('adm-pass').value === db.config.pass) {
@@ -310,6 +375,112 @@
     }
 
     init();
+
+    // Chame esta função dentro do seu login() quando o login for sucesso
+function login() {
+    if(document.getElementById('adm-user').value === db.config.user && document.getElementById('adm-pass').value === db.config.pass) {
+        document.getElementById('adm-login-area').style.display = 'none'; 
+        document.getElementById('adm-painel').style.display = 'block';
+        atualizarListaRemover(); // Carrega a lista de filmes cadastrados
+    } else alert("Erro!");
+}
+
+// Função para listar tudo que já foi cadastrado no banco
+function atualizarListaRemover() {
+    const listaDiv = document.getElementById('lista-gerenciar');
+    const filmes = Object.values(db.movie || {});
+    const series = Object.values(db.tv || {});
+    const todos = [...filmes, ...series];
+
+    if(todos.length === 0) {
+        listaDiv.innerHTML = '<p style="font-size:12px; color:#555; text-align:center;">Nenhum item cadastrado.</p>';
+        return;
+    }
+
+    listaDiv.innerHTML = todos.map(m => `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:10px; border-radius:5px;">
+            <span style="font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${m.title || m.name}</span>
+            <button onclick="removerItem('${m.id}', '${m.name ? 'tv' : 'movie'}')" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">🗑️</button>
+        </div>
+    `).join('');
+}
+
+// Função para deletar um item do banco
+async function removerItem(id, tipo) {
+    if(confirm("Deseja remover este conteúdo do site?")) {
+        delete db[tipo][id];
+        db.recentes = db.recentes.filter(x => x.id != id);
+        await salvarNaNuvem();
+        alert("Removido com sucesso!");
+        atualizarListaRemover();
+        render(db.recentes, 'grid-recentes');
+    }
+}
+
+// Ajuste na busca para ficar mais visível
+async function buscarTMDB() {
+    const q = document.getElementById('adm-busca').value;
+    if(q.length < 2) return;
+    const r = await fetch(`https://api.themoviedb.org/3/search/${tipoAtual}?api_key=${API_KEY}&query=${q}&language=pt-BR`);
+    const d = await r.json();
+    document.getElementById('res-busca-adm').innerHTML = d.results.map(m => `
+        <div onclick='selecionado=${JSON.stringify(m).replace(/'/g, "")}; document.getElementById("adm-busca").value="${m.title || m.name}"; document.getElementById("res-busca-adm").innerHTML=""' 
+             style="padding:12px; cursor:pointer; border-bottom:1px solid #222; font-size:13px; color:#eee;">
+             ${m.title || m.name} (${(m.release_date || m.first_air_date || "").substring(0,4)})
+        </div>
+    `).join('');
+}
+// Ajuste para mostrar campos de temporada/episódio
+function setTipo(t) {
+    tipoAtual = t;
+    document.getElementById('btn-m').style.background = t == 'movie' ? 'var(--red)' : '#333';
+    document.getElementById('btn-t').style.background = t == 'tv' ? 'var(--red)' : '#333';
+    
+    // Mostra ou esconde campos de EP
+    document.getElementById('campos-serie').style.display = t == 'tv' ? 'flex' : 'none';
+}
+
+// Função Salvar Atualizada para Episódios
+async function salvar() {
+    const link = document.getElementById('ed-link').value;
+    if (!selecionado || !link) return alert("Selecione um título e coloque o link!");
+
+    const tipo = selecionado.name ? 'tv' : 'movie';
+    if (!db[tipo]) db[tipo] = {};
+
+    if (tipo === 'tv') {
+        const temp = document.getElementById('adm-temp').value || "1";
+        const ep = document.getElementById('adm-ep').value || "1";
+
+        // Se a série ainda não existe no seu banco, cria a estrutura
+        if (!db.tv[selecionado.id]) {
+            db.tv[selecionado.id] = { ...selecionado, temporadas: {} };
+        }
+        
+        // Se a temporada não existe, cria
+        if (!db.tv[selecionado.id].temporadas) db.tv[selecionado.id].temporadas = {};
+        if (!db.tv[selecionado.id].temporadas[temp]) db.tv[selecionado.id].temporadas[temp] = {};
+
+        // Salva o link do episódio específico
+        db.tv[selecionado.id].temporadas[temp][ep] = link;
+        
+    } else {
+        // Se for filme, salva normal como você já fazia
+        db.movie[selecionado.id] = { ...selecionado, link: link };
+    }
+
+    // Adiciona aos recentes se não estiver lá
+    if (!db.recentes.find(x => x.id == selecionado.id)) {
+        db.recentes.unshift(selecionado);
+    }
+    
+    await salvarNaNuvem();
+    alert("Publicado com sucesso!");
+    // Limpa os campos para o próximo
+    document.getElementById('ed-link').value = "";
+    document.getElementById('adm-ep').value = "";
+    atualizarListaRemover();
+}
 </script>
 </body>
 </html>
