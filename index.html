@@ -27,7 +27,7 @@
         }
         .search-container input { background: none; border: none; color: white; width: 100%; outline: none; font-size: 14px; }
 
-        /* BANNER */
+        /* BANNER REAJUSTADO (SEM CORTAR CABEÇAS) */
         #hero-slider {
             width: 100%; height: 65vh; background-size: cover; background-position: top center; 
             transition: 1.5s ease-in-out; position: relative; display: flex; 
@@ -75,12 +75,19 @@
         .ep-card { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1); }
 
         .sinopse-container { font-size: 16px; line-height: 1.8; color: #eee; margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.5); border-radius: 10px; }
-        .btn-play { background: var(--red); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-play { background: var(--red); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; }
 
         .modal-admin { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 10000; padding: 20px; overflow-y: auto; }
         .admin-box { background: #111; max-width: 450px; margin: 30px auto; padding: 25px; border-radius: 15px; border: 1px solid #333; position: relative; }
         .admin-input { width: 100%; padding: 12px; margin-bottom: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
         .close-admin { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .logo-txt { display: none; }
+            #hero-slider { height: 45vh; }
+            .det-flex { flex-direction: column; text-align: center; }
+            .det-poster-img { width: 100%; max-width: 180px; margin: 0 auto; }
+        }
     </style>
 </head>
 <body>
@@ -126,6 +133,7 @@
         <div class="det-info">
             <h1 id="det-tit" style="font-size: 2.5rem; margin: 0; text-shadow: 2px 2px 10px #000;"></h1>
             <p id="det-meta" style="color:var(--red); font-weight:bold; margin-top: 10px;"></p>
+            <div id="det-views" style="font-size: 14px; color: #aaa; margin-top: 5px;">👁️ 0 visualizações</div>
             <div id="player-box" class="player-wrap"><video id="main-video" controls playsinline></video></div>
             <div id="actions-area"><button id="btn-play-trigger" class="btn-play">▶ ASSISTIR AGORA</button></div>
             <div id="series-area" style="display:none; margin-top: 20px;">
@@ -148,52 +156,51 @@
             <h2 style="text-align:center; color: var(--red);">CINETEK ADMIN</h2>
             <input type="text" id="adm-user" class="admin-input" placeholder="Usuário">
             <input type="password" id="adm-pass" class="admin-input" placeholder="Senha" onkeyup="if(event.key==='Enter') login()">
-            <button onclick="login()" class="btn-play" style="width:100%;">ENTRAR</button>
+            <button onclick="login()" class="btn-play" style="width:100%; justify-content:center;">ENTRAR</button>
         </div>
 
         <div id="adm-painel" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
-                <h3 style="margin:0;">Dashboard</h3>
-                <div style="display:flex; gap:10px;">
-                    <button onclick="toggleTrocarSenha()" style="background:none; border:1px solid #444; color:#aaa; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">🔑 Senha</button>
-                    <button onclick="location.reload()" style="color:var(--red); background:none; border:none; cursor:pointer; font-weight: bold;">SAIR</button>
-                </div>
-            </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+    <h3 style="margin:0;">Dashboard</h3>
+    <div style="display:flex; gap:10px;">
+        <button onclick="toggleTrocarSenha()" style="background:none; border:1px solid #444; color:#aaa; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">🔑 Senha</button>
+        <button onclick="location.reload()" style="color:var(--red); background:none; border:none; cursor:pointer; font-weight: bold;">SAIR</button>
+    </div>
+</div>
 
-            <div id="area-trocar-senha" style="display:none; background:#1a1a1a; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid var(--red);">
-                <p style="font-size:12px; color:#fff; margin-bottom:10px;">Nova Senha Admin:</p>
-                <input type="text" id="nova-senha-input" class="admin-input" placeholder="Digite a nova senha">
-                <button onclick="confirmarTrocaSenha()" class="btn-play" style="width:100%; padding:10px; font-size:12px;">SALVAR NOVA SENHA</button>
-            </div>
-            
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <button onclick="setTipo('movie')" id="btn-m" style="flex:1; padding:12px; background:var(--red); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">🎬 FILMES</button>
-                <button onclick="setTipo('tv')" id="btn-t" style="flex:1; padding:12px; background:#333; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">📺 SÉRIES</button>
-            </div>
-            
-            <div style="background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222;">
-                <p style="font-size: 11px; color: #888; margin: 0 0 8px 0;">1. BUSCAR NO TMDB:</p>
-                <input type="text" id="adm-busca" class="admin-input" placeholder="Ex: Suits..." oninput="buscarTMDB()">
-                <div id="res-busca-adm" style="max-height:150px; overflow-y:auto; background:#111; border-radius: 4px;"></div>
-            </div>
-            
-            <div id="sessao-links" style="background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222;">
-                <p style="font-size: 11px; color: #888; margin: 0 0 8px 0;">2. CONFIGURAR VÍDEO:</p>
-                
-                <div id="campos-serie" style="display:none; gap:10px; margin-bottom:10px;">
-                    <input type="number" id="adm-temp" class="admin-input" placeholder="Temp" oninput="carregarLinkEdicao()" style="width:70px;">
-                    <input type="number" id="adm-ep" class="admin-input" placeholder="EP" oninput="carregarLinkEdicao()" style="width:70px;">
-                </div>
+<div id="area-trocar-senha" style="display:none; background:#1a1a1a; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid var(--red);">
+    <p style="font-size:12px; color:#fff; margin-bottom:10px;">Nova Senha Admin:</p>
+    <input type="text" id="nova-senha-input" class="admin-input" placeholder="Digite a nova senha">
+    <button onclick="confirmarTrocaSenha()" class="btn-play" style="width:100%; padding:10px; font-size:12px;">SALVAR NOVA SENHA</button>
+</div>
+    
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <button onclick="setTipo('movie')" id="btn-m" style="flex:1; padding:12px; background:var(--red); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">🎬 FILMES</button>
+        <button onclick="setTipo('tv')" id="btn-t" style="flex:1; padding:12px; background:#333; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">📺 SÉRIES</button>
+    </div>
+    
+    <div style="background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222;">
+        <p style="font-size: 11px; color: #888; margin: 0 0 8px 0;">1. BUSCAR NO TMDB:</p>
+        <input type="text" id="adm-busca" class="admin-input" placeholder="Ex: Suits..." oninput="buscarTMDB()">
+        <div id="res-busca-adm" style="max-height:150px; overflow-y:auto; background:#111; border-radius: 4px;"></div>
+    </div>
+    
+    <div id="sessao-links" style="background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222;">
+        <p style="font-size: 11px; color: #888; margin: 0 0 8px 0;">2. CONFIGURAR VÍDEO:</p>
+        
+       <div id="campos-serie" style="display:none; gap:10px; margin-bottom:10px;">
+    <input type="number" id="adm-temp" class="admin-input" placeholder="Temp" oninput="carregarLinkEdicao()" style="width:70px;">
+    <input type="number" id="adm-ep" class="admin-input" placeholder="EP" oninput="carregarLinkEdicao()" style="width:70px;">
+</div>
 
-                <input type="text" id="ed-link" class="admin-input" placeholder="Link .mp4 do vídeo">
-                <button onclick="salvar()" class="btn-play" style="width:100%; height: 50px; font-size: 16px;">🚀 PUBLICAR AGORA</button>
-            </div>
+    <input type="text" id="ed-link" class="admin-input" placeholder="Link .mp4 do vídeo">
+    <button onclick="salvar()" class="btn-play" style="width:100%; justify-content:center; height: 50px; font-size: 16px;">🚀 PUBLICAR AGORA</button>
 
-            <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 15px;">
-                <h4 style="font-size:13px; color:#888; margin-bottom: 10px;">📂 CONTEÚDOS NO AR</h4>
-                <div id="lista-gerenciar" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
-            </div>
-        </div>
+    <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 15px;">
+        <h4 style="font-size:13px; color:#888; margin-bottom: 10px;">📂 CONTEÚDOS NO AR</h4>
+        <div id="lista-gerenciar" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+    </div>
+</div>
     </div>
 </div>
 
@@ -208,12 +215,7 @@
         try {
             const r = await fetch(DATABASE_URL);
             const dados = await r.json();
-            if (dados) { 
-                db = dados; 
-                if(!db.movie) db.movie = {};
-                if(!db.tv) db.tv = {};
-                render(db.recentes || [], 'grid-recentes'); 
-            }
+            if (dados) { db = dados; render(db.recentes || [], 'grid-recentes'); }
         } catch (e) { console.error("Erro banco"); }
     }
 
@@ -247,98 +249,111 @@
         });
     }
 
-    async function abrirDet(m) {
-        selecionado = m; 
-        const tipo = m.name ? 'tv' : 'movie';
-        const page = document.getElementById('detalhes-page');
-        
-        page.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${m.backdrop_path})`;
-        document.getElementById('det-tit').innerText = m.title || m.name;
-        document.getElementById('det-poster').src = `https://image.tmdb.org/t/p/w500${m.poster_path}`;
-        document.getElementById('det-meta').innerText = `⭐ ${m.vote_average.toFixed(1)} | ${m.release_date || m.first_air_date || ""}`;
-        document.getElementById('det-sinopse').innerText = m.overview || "Sinopse não disponível.";
-        
-        const pBox = document.getElementById('player-box'); 
-        const sArea = document.getElementById('series-area'); 
-        const btnPlay = document.getElementById('btn-play-trigger');
-        
-        pBox.style.display = 'none'; 
-        sArea.style.display = 'none';
-        document.getElementById('main-video').src = "";
+   async function abrirDet(m) {
+    selecionado = m; 
+    const tipo = m.name ? 'tv' : 'movie';
+    const page = document.getElementById('detalhes-page');
+    
+    page.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${m.backdrop_path})`;
+    document.getElementById('det-tit').innerText = m.title || m.name;
+    document.getElementById('det-poster').src = `https://image.tmdb.org/t/p/w500${m.poster_path}`;
+    document.getElementById('det-meta').innerText = `⭐ ${m.vote_average.toFixed(1)} | ${m.release_date || m.first_air_date || ""}`;
+    document.getElementById('det-sinopse').innerText = m.overview || "Sinopse não disponível.";
+    
+    // MOSTRAR VISUALIZAÇÕES
+    const views = (db[tipo] && db[tipo][m.id] && db[tipo][m.id].views) ? db[tipo][m.id].views : 0;
+    document.getElementById('det-views').innerText = `👁️ ${views} visualizações`;
 
-        if(tipo === 'tv') {
-            btnPlay.style.display = 'none'; 
-            sArea.style.display = 'block'; 
-            carregarTemporadas(m.id);
-        } else {
-            btnPlay.style.display = 'inline-flex';
-            btnPlay.onclick = () => {
-                if(db.movie && db.movie[m.id] && db.movie[m.id].link) { 
-                    pBox.style.display = 'block'; 
-                    document.getElementById('main-video').src = db.movie[m.id].link; 
-                    btnPlay.style.display = 'none';
-                    pBox.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                    alert("Este filme ainda não possui um link cadastrado.");
-                }
-            };
-        }
+    const pBox = document.getElementById('player-box'); 
+    const sArea = document.getElementById('series-area'); 
+    const btnPlay = document.getElementById('btn-play-trigger');
+    
+    pBox.style.display = 'none'; 
+    sArea.style.display = 'none';
+    document.getElementById('main-video').src = "";
 
-        const rs = await fetch(`https://api.themoviedb.org/3/${tipo}/${m.id}/similar?api_key=${API_KEY}&language=pt-BR`);
-        const ds = await rs.json(); 
-        render(ds.results.slice(0, 6), 'grid-semelhantes');
-        
-        page.style.display = 'block'; 
-        page.scrollTo(0, 0);
+    if(tipo === 'tv') {
+        btnPlay.style.display = 'none'; 
+        sArea.style.display = 'block'; 
+        carregarTemporadas(m.id);
+    } else {
+        btnPlay.style.display = 'inline-flex';
+        btnPlay.onclick = () => {
+            if(db.movie && db.movie[m.id] && db.movie[m.id].link) { 
+                pBox.style.display = 'block'; 
+                document.getElementById('main-video').src = db.movie[m.id].link; 
+                btnPlay.style.display = 'none';
+                pBox.scrollIntoView({ behavior: 'smooth' });
+                registrarView(m.id, 'movie');
+            } else {
+                alert("Este filme ainda não possui um link cadastrado.");
+            }
+        };
     }
+
+    const rs = await fetch(`https://api.themoviedb.org/3/${tipo}/${m.id}/similar?api_key=${API_KEY}&language=pt-BR`);
+    const ds = await rs.json(); 
+    render(ds.results.slice(0, 6), 'grid-semelhantes');
+    
+    page.style.display = 'block'; 
+    page.scrollTo(0, 0);
+}
 
     async function carregarTemporadas(id) {
         const r = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=pt-BR`);
-        const d = await r.json(); 
-        document.getElementById('select-temp').innerHTML = d.seasons.map(s => `<option value="${s.season_number}">${s.name}</option>`).join('');
+        const d = await r.json(); document.getElementById('select-temp').innerHTML = d.seasons.map(s => `<option value="${s.season_number}">${s.name}</option>`).join('');
         carregarEpisodios();
     }
 
     async function carregarEpisodios() {
-        const s = document.getElementById('select-temp').value;
-        const r = await fetch(`https://api.themoviedb.org/3/tv/${selecionado.id}/season/${s}?api_key=${API_KEY}&language=pt-BR`);
-        const d = await r.json();
-        document.getElementById('ep-list').innerHTML = d.episodes.map(e => `
-            <div class="ep-card" onclick="tocarEp('${selecionado.id}', '${s}', '${e.episode_number}')">
-                <b>EP ${e.episode_number}</b> - ${e.name}
-            </div>
-        `).join('');
-    }
+    const s = document.getElementById('select-temp').value;
+    const r = await fetch(`https://api.themoviedb.org/3/tv/${selecionado.id}/season/${s}?api_key=${API_KEY}&language=pt-BR`);
+    const d = await r.json();
+    document.getElementById('ep-list').innerHTML = d.episodes.map(e => `
+        <div class="ep-card" onclick="tocarEp('${selecionado.id}', '${s}', '${e.episode_number}')">
+            <b>EP ${e.episode_number}</b> - ${e.name}
+        </div>
+    `).join('');
+}
 
-    function tocarEp(idSerie, numTemp, numEp) {
-        if (db.tv && db.tv[idSerie] && db.tv[idSerie].temporadas && 
-            db.tv[idSerie].temporadas[numTemp] && db.tv[idSerie].temporadas[numTemp][numEp]) {
-            const linkEp = db.tv[idSerie].temporadas[numTemp][numEp];
-            const pBox = document.getElementById('player-box');
-            const video = document.getElementById('main-video');
-            pBox.style.display = 'block';
-            video.src = linkEp;
-            video.play();
-            pBox.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            alert("O link para este episódio ainda não foi cadastrado.");
-        }
+async function registrarView(id, tipo) {
+    if (!db[tipo] || !db[tipo][id]) return;
+    if (!db[tipo][id].views) db[tipo][id].views = 0;
+    db[tipo][id].views += 1;
+    document.getElementById('det-views').innerText = `👁️ ${db[tipo][id].views} visualizações`;
+    await salvarNaNuvem();
+}
+
+function tocarEp(idSerie, numTemp, numEp) {
+    if (db.tv && db.tv[idSerie] && db.tv[idSerie].temporadas && 
+        db.tv[idSerie].temporadas[numTemp] && db.tv[idSerie].temporadas[numTemp][numEp]) {
+        
+        const linkEp = db.tv[idSerie].temporadas[numTemp][numEp];
+        const pBox = document.getElementById('player-box');
+        const video = document.getElementById('main-video');
+
+        pBox.style.display = 'block';
+        video.src = linkEp;
+        video.play();
+        pBox.scrollIntoView({ behavior: 'smooth' });
+        
+        registrarView(idSerie, 'tv');
+    } else {
+        alert("O link para este episódio ainda não foi cadastrado.");
     }
+}
 
     function login() {
         if(document.getElementById('adm-user').value === db.config.user && document.getElementById('adm-pass').value === db.config.pass) {
-            document.getElementById('adm-login-area').style.display = 'none'; 
-            document.getElementById('adm-painel').style.display = 'block';
+            document.getElementById('adm-login-area').style.display = 'none'; document.getElementById('adm-painel').style.display = 'block';
             atualizarListaRemover();
-        } else alert("Usuário ou Senha incorretos!");
+        } else alert("Erro!");
     }
 
     async function salvar() {
-        const link = document.getElementById('ed-link').value;
-        if (!selecionado || !link) return alert("Selecione um título e coloque o link!");
-
+        const link = document.getElementById('ed-link').value; if(!selecionado || !link) return alert("Erro!");
         const tipo = selecionado.name ? 'tv' : 'movie';
-        if (!db[tipo]) db[tipo] = {};
+        if(!db[tipo]) db[tipo] = {};
 
         if (tipo === 'tv') {
             const temp = document.getElementById('adm-temp').value || "1";
@@ -351,42 +366,35 @@
             db.movie[selecionado.id] = { ...selecionado, link: link };
         }
 
-        if (!db.recentes.find(x => x.id == selecionado.id)) {
-            db.recentes.unshift(selecionado);
-        }
-        
-        await salvarNaNuvem();
-        alert("Publicado com sucesso!");
+        if (!db.recentes.find(x => x.id == selecionado.id)) db.recentes.unshift(selecionado);
+        await salvarNaNuvem(); alert("Publicado!"); 
         document.getElementById('ed-link').value = "";
-        document.getElementById('adm-ep').value = "";
         atualizarListaRemover();
     }
 
-    function setTipo(t) {
-        tipoAtual = t;
-        document.getElementById('btn-m').style.background = t == 'movie' ? 'var(--red)' : '#333';
-        document.getElementById('btn-t').style.background = t == 'tv' ? 'var(--red)' : '#333';
-        document.getElementById('campos-serie').style.display = t == 'tv' ? 'flex' : 'none';
+    function toggleMenu(s) { document.getElementById('menu-lat').classList.toggle('active', s); }
+    function fecharDet() { document.getElementById('detalhes-page').style.display = 'none'; document.getElementById('main-video').src = ""; }
+    function abrirAdmin() { document.getElementById('admin-modal').style.display = 'block'; }
+    function fecharAdmin() { document.getElementById('admin-modal').style.display = 'none'; }
+    
+    function setTipo(t) { 
+        tipoAtual = t; 
+        document.getElementById('btn-m').style.background = t=='movie'?'var(--red)':'#333'; 
+        document.getElementById('btn-t').style.background = t=='tv'?'var(--red)':'#333'; 
+        document.getElementById('campos-serie').style.display = t=='tv'?'flex':'none';
     }
-
+    
     async function buscarTMDB() {
         const q = document.getElementById('adm-busca').value;
         if(q.length < 2) return;
         const r = await fetch(`https://api.themoviedb.org/3/search/${tipoAtual}?api_key=${API_KEY}&query=${q}&language=pt-BR`);
         const d = await r.json();
         document.getElementById('res-busca-adm').innerHTML = d.results.map(m => `
-            <div onclick='selecionarItem(${JSON.stringify(m).replace(/'/g, "")})' 
+            <div onclick='selecionado=${JSON.stringify(m).replace(/'/g, "")}; document.getElementById("adm-busca").value="${m.title || m.name}"; document.getElementById("res-busca-adm").innerHTML=""' 
                  style="padding:12px; cursor:pointer; border-bottom:1px solid #222; font-size:13px; color:#eee;">
                  ${m.title || m.name} (${(m.release_date || m.first_air_date || "").substring(0,4)})
             </div>
         `).join('');
-    }
-
-    function selecionarItem(m) {
-        selecionado = m;
-        document.getElementById("adm-busca").value = m.title || m.name;
-        document.getElementById("res-busca-adm").innerHTML = "";
-        alert("Selecionado: " + (m.title || m.name));
     }
 
     async function pesquisaGeral() {
@@ -406,10 +414,12 @@
         const filmes = Object.values(db.movie || {});
         const series = Object.values(db.tv || {});
         const todos = [...filmes, ...series];
+
         if(todos.length === 0) {
-            listaDiv.innerHTML = '<p style="font-size:12px; color:#555; text-align:center;">Nenhum item cadastrado.</p>';
+            listaDiv.innerHTML = '<p style="font-size:12px; color:#555; text-align:center;">Nenhum item.</p>';
             return;
         }
+
         listaDiv.innerHTML = todos.map(m => `
             <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:10px; border-radius:5px; margin-bottom:5px;">
                 <span style="font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%;">${m.title || m.name}</span>
@@ -422,11 +432,10 @@
     }
 
     async function removerItem(id, tipo) {
-        if(confirm("Deseja remover este conteúdo do site?")) {
+        if(confirm("Remover?")) {
             delete db[tipo][id];
             db.recentes = db.recentes.filter(x => x.id != id);
             await salvarNaNuvem();
-            alert("Removido com sucesso!");
             atualizarListaRemover();
             render(db.recentes, 'grid-recentes');
         }
@@ -447,12 +456,10 @@
             let resumo = "";
             if (item.temporadas) {
                 for (let t in item.temporadas) {
-                    for (let e in item.temporadas[t]) {
-                        resumo += `T${t}:EP${e} | `;
-                    }
+                    for (let e in item.temporadas[t]) resumo += `T${t}:EP${e} | `;
                 }
             }
-            alert("Série: " + item.name + "\nCadastrados: " + (resumo || "Nenhum") + "\n\nDigite a Temporada e o EP abaixo para carregar o link.");
+            alert("Cadastrados: " + (resumo || "Nenhum"));
         }
         document.querySelector('.admin-box').scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -477,19 +484,14 @@
 
     async function confirmarTrocaSenha() {
         const novaSenha = document.getElementById('nova-senha-input').value;
-        if (novaSenha.length < 4) return alert("A senha deve ter pelo menos 4 caracteres!");
-        if (confirm("Tem certeza que deseja mudar a senha?")) {
+        if (novaSenha.length < 4) return alert("Mínimo 4 caracteres");
+        if (confirm("Mudar senha?")) {
             db.config.pass = novaSenha;
             await salvarNaNuvem();
             alert("Senha alterada!");
             toggleTrocarSenha();
         }
     }
-
-    function toggleMenu(s) { document.getElementById('menu-lat').classList.toggle('active', s); }
-    function fecharDet() { document.getElementById('detalhes-page').style.display = 'none'; document.getElementById('main-video').src = ""; }
-    function abrirAdmin() { document.getElementById('admin-modal').style.display = 'block'; }
-    function fecharAdmin() { document.getElementById('admin-modal').style.display = 'none'; }
 
     init();
 </script>
