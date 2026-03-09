@@ -27,7 +27,7 @@
         }
         .search-container input { background: none; border: none; color: white; width: 100%; outline: none; font-size: 14px; }
 
-        /* BANNER REAJUSTADO (SEM CORTAR CABEÇAS) */
+        /* BANNER */
         #hero-slider {
             width: 100%; height: 65vh; background-size: cover; background-position: top center; 
             transition: 1.5s ease-in-out; position: relative; display: flex; 
@@ -50,7 +50,7 @@
         /* GRADES */
         .secao-tit { padding: 25px 5% 10px; font-size: 1.3rem; color: var(--red); font-weight: bold; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; padding: 10px 5%; }
-        .card { cursor: pointer; text-align: center; transition: 0.3s; }
+        .card { cursor: pointer; text-align: center; transition: 0.3s; position: relative; }
         .card:hover { transform: scale(1.05); }
         .card img { width: 100%; border-radius: 8px; aspect-ratio: 2/3; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .card p { margin: 8px 0; font-size: 12px; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -107,6 +107,11 @@
 </div>
 
 <div id="home">
+    <div id="section-continuar" style="display:none;">
+        <h2 class="secao-tit" style="color: #00d4ff;">⏳ Continuar Assistindo</h2>
+        <div class="grid" id="grid-continuar"></div>
+    </div>
+
     <h2 class="secao-tit">✨ Adicionados Recentemente</h2>
     <div class="grid" id="grid-recentes"></div>
     <h2 class="secao-tit" id="main-tit">🔥 EM ALTA</h2>
@@ -151,56 +156,48 @@
 
 <div id="admin-modal" class="modal-admin">
     <div class="admin-box" style="max-width: 550px;"> <button class="close-admin" onclick="fecharAdmin()">✕</button>
-        
         <div id="adm-login-area">
             <h2 style="text-align:center; color: var(--red);">CINETEK ADMIN</h2>
             <input type="text" id="adm-user" class="admin-input" placeholder="Usuário">
             <input type="password" id="adm-pass" class="admin-input" placeholder="Senha" onkeyup="if(event.key==='Enter') login()">
             <button onclick="login()" class="btn-play" style="width:100%; justify-content:center;">ENTRAR</button>
         </div>
-
         <div id="adm-painel" style="display:none;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
-    <h3 style="margin:0;">Dashboard</h3>
-    <div style="display:flex; gap:10px;">
-        <button onclick="toggleTrocarSenha()" style="background:none; border:1px solid #444; color:#aaa; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">🔑 Senha</button>
-        <button onclick="location.reload()" style="color:var(--red); background:none; border:none; cursor:pointer; font-weight: bold;">SAIR</button>
-    </div>
-</div>
-
-<div id="area-trocar-senha" style="display:none; background:#1a1a1a; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid var(--red);">
-    <p style="font-size:12px; color:#fff; margin-bottom:10px;">Nova Senha Admin:</p>
-    <input type="text" id="nova-senha-input" class="admin-input" placeholder="Digite a nova senha">
-    <button onclick="confirmarTrocaSenha()" class="btn-play" style="width:100%; padding:10px; font-size:12px;">SALVAR NOVA SENHA</button>
-</div>
-    
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button onclick="setTipo('movie')" id="btn-m" style="flex:1; padding:12px; background:var(--red); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">🎬 FILMES</button>
-        <button onclick="setTipo('tv')" id="btn-t" style="flex:1; padding:12px; background:#333; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">📺 SÉRIES</button>
-    </div>
-    
-    <div style="background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222;">
-        <p style="font-size: 11px; color: #888; margin: 0 0 8px 0;">1. BUSCAR NO TMDB:</p>
-        <input type="text" id="adm-busca" class="admin-input" placeholder="Ex: Suits..." oninput="buscarTMDB()">
-        <div id="res-busca-adm" style="max-height:150px; overflow-y:auto; background:#111; border-radius: 4px;"></div>
-    </div>
-    
-    <div id="sessao-links" style="background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222;">
-        <p style="font-size: 11px; color: #888; margin: 0 0 8px 0;">2. CONFIGURAR VÍDEO:</p>
-        
-       <div id="campos-serie" style="display:none; gap:10px; margin-bottom:10px;">
-    <input type="number" id="adm-temp" class="admin-input" placeholder="Temp" oninput="carregarLinkEdicao()" style="width:70px;">
-    <input type="number" id="adm-ep" class="admin-input" placeholder="EP" oninput="carregarLinkEdicao()" style="width:70px;">
-</div>
-
-    <input type="text" id="ed-link" class="admin-input" placeholder="Link .mp4 do vídeo">
-    <button onclick="salvar()" class="btn-play" style="width:100%; justify-content:center; height: 50px; font-size: 16px;">🚀 PUBLICAR AGORA</button>
-
-    <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 15px;">
-        <h4 style="font-size:13px; color:#888; margin-bottom: 10px;">📂 CONTEÚDOS NO AR</h4>
-        <div id="lista-gerenciar" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
-    </div>
-</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <h3 style="margin:0;">Dashboard</h3>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="toggleTrocarSenha()" style="background:none; border:1px solid #444; color:#aaa; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">🔑 Senha</button>
+                    <button onclick="location.reload()" style="color:var(--red); background:none; border:none; cursor:pointer; font-weight: bold;">SAIR</button>
+                </div>
+            </div>
+            <div id="area-trocar-senha" style="display:none; background:#1a1a1a; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid var(--red);">
+                <p style="font-size:12px; color:#fff; margin-bottom:10px;">Nova Senha Admin:</p>
+                <input type="text" id="nova-senha-input" class="admin-input" placeholder="Digite a nova senha">
+                <button onclick="confirmarTrocaSenha()" class="btn-play" style="width:100%; padding:10px; font-size:12px;">SALVAR NOVA SENHA</button>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button onclick="setTipo('movie')" id="btn-m" style="flex:1; padding:12px; background:var(--red); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">🎬 FILMES</button>
+                <button onclick="setTipo('tv')" id="btn-t" style="flex:1; padding:12px; background:#333; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">📺 SÉRIES</button>
+            </div>
+            <div style="background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222;">
+                <p style="font-size: 11px; color: #888; margin: 0 0 8px 0;">1. BUSCAR NO TMDB:</p>
+                <input type="text" id="adm-busca" class="admin-input" placeholder="Ex: Suits..." oninput="buscarTMDB()">
+                <div id="res-busca-adm" style="max-height:150px; overflow-y:auto; background:#111; border-radius: 4px;"></div>
+            </div>
+            <div id="sessao-links" style="background: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222;">
+                <p style="font-size: 11px; color: #888; margin: 0 0 8px 0;">2. CONFIGURAR VÍDEO:</p>
+                <div id="campos-serie" style="display:none; gap:10px; margin-bottom:10px;">
+                    <input type="number" id="adm-temp" class="admin-input" placeholder="Temp" oninput="carregarLinkEdicao()" style="width:70px;">
+                    <input type="number" id="adm-ep" class="admin-input" placeholder="EP" oninput="carregarLinkEdicao()" style="width:70px;">
+                </div>
+                <input type="text" id="ed-link" class="admin-input" placeholder="Link .mp4 do vídeo">
+                <button onclick="salvar()" class="btn-play" style="width:100%; justify-content:center; height: 50px; font-size: 16px;">🚀 PUBLICAR AGORA</button>
+                <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 15px;">
+                    <h4 style="font-size:13px; color:#888; margin-bottom: 10px;">📂 CONTEÚDOS NO AR</h4>
+                    <div id="lista-gerenciar" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -225,6 +222,7 @@
 
     async function init() {
         await carregarBancoNuvem();
+        renderContinuar();
         const r = await fetch(`https://api.themoviedb.org/3/trending/all/week?api_key=${API_KEY}&language=pt-BR`);
         const d = await r.json(); sliderItems = d.results.slice(0, 8);
         render(d.results, 'main-grid'); startSlider();
@@ -260,7 +258,6 @@
     document.getElementById('det-meta').innerText = `⭐ ${m.vote_average.toFixed(1)} | ${m.release_date || m.first_air_date || ""}`;
     document.getElementById('det-sinopse').innerText = m.overview || "Sinopse não disponível.";
     
-    // MOSTRAR VISUALIZAÇÕES
     const views = (db[tipo] && db[tipo][m.id] && db[tipo][m.id].views) ? db[tipo][m.id].views : 0;
     document.getElementById('det-views').innerText = `👁️ ${views} visualizações`;
 
@@ -343,6 +340,58 @@ function tocarEp(idSerie, numTemp, numEp) {
     }
 }
 
+// LÓGICA CONTINUAR ASSISTINDO
+const videoElement = document.getElementById('main-video');
+videoElement.ontimeupdate = () => {
+    if (videoElement.currentTime > 10 && selecionado) {
+        salvarProgresso(selecionado, videoElement.currentTime);
+    }
+};
+
+function salvarProgresso(m, tempo) {
+    let progresso = JSON.parse(localStorage.getItem('cinetek_progresso') || '{}');
+    progresso[m.id] = { item: m, tempo: tempo, timestamp: Date.now() };
+    localStorage.setItem('cinetek_progresso', JSON.stringify(progresso));
+}
+
+function renderContinuar() {
+    const lista = JSON.parse(localStorage.getItem('cinetek_progresso') || '{}');
+    const container = document.getElementById('grid-continuar');
+    const section = document.getElementById('section-continuar');
+    const itens = Object.values(lista).sort((a, b) => b.timestamp - a.timestamp).slice(0, 4);
+    
+    if (itens.length > 0 && container && section) {
+        section.style.display = 'block';
+        container.innerHTML = "";
+        itens.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${p.item.poster_path}"><p>▶ ${p.item.title || p.item.name}</p>`;
+            
+            card.onclick = async () => {
+                await abrirDet(p.item); // Abre a página do filme
+                
+                const v = document.getElementById('main-video');
+                const pBox = document.getElementById('player-box');
+
+                // Se for filme, já prepara o link
+                if(!p.item.name) {
+                    v.src = db.movie[p.item.id].link;
+                    pBox.style.display = 'block';
+                    document.getElementById('btn-play-trigger').style.display = 'none';
+                }
+
+                // O SEGREDO: Só muda o tempo quando o vídeo carregar os metadados
+                v.onloadedmetadata = () => {
+                    v.currentTime = p.tempo;
+                    v.play();
+                };
+            };
+            container.appendChild(card);
+        });
+    }
+}
+
     function login() {
         if(document.getElementById('adm-user').value === db.config.user && document.getElementById('adm-pass').value === db.config.pass) {
             document.getElementById('adm-login-area').style.display = 'none'; document.getElementById('adm-painel').style.display = 'block';
@@ -373,7 +422,7 @@ function tocarEp(idSerie, numTemp, numEp) {
     }
 
     function toggleMenu(s) { document.getElementById('menu-lat').classList.toggle('active', s); }
-    function fecharDet() { document.getElementById('detalhes-page').style.display = 'none'; document.getElementById('main-video').src = ""; }
+    function fecharDet() { document.getElementById('detalhes-page').style.display = 'none'; document.getElementById('main-video').src = ""; renderContinuar(); }
     function abrirAdmin() { document.getElementById('admin-modal').style.display = 'block'; }
     function fecharAdmin() { document.getElementById('admin-modal').style.display = 'none'; }
     
@@ -414,13 +463,7 @@ function tocarEp(idSerie, numTemp, numEp) {
         const filmes = Object.values(db.movie || {});
         const series = Object.values(db.tv || {});
         const todos = [...filmes, ...series];
-
-        if(todos.length === 0) {
-            listaDiv.innerHTML = '<p style="font-size:12px; color:#555; text-align:center;">Nenhum item.</p>';
-            return;
-        }
-
-        listaDiv.innerHTML = todos.map(m => `
+        listaDiv.innerHTML = todos.length === 0 ? '<p style="font-size:12px; color:#555; text-align:center;">Nenhum item.</p>' : todos.map(m => `
             <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:10px; border-radius:5px; margin-bottom:5px;">
                 <span style="font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%;">${m.title || m.name}</span>
                 <div style="display:flex; gap:10px;">
@@ -432,35 +475,14 @@ function tocarEp(idSerie, numTemp, numEp) {
     }
 
     async function removerItem(id, tipo) {
-        if(confirm("Remover?")) {
-            delete db[tipo][id];
-            db.recentes = db.recentes.filter(x => x.id != id);
-            await salvarNaNuvem();
-            atualizarListaRemover();
-            render(db.recentes, 'grid-recentes');
-        }
+        if(confirm("Remover?")) { delete db[tipo][id]; db.recentes = db.recentes.filter(x => x.id != id); await salvarNaNuvem(); atualizarListaRemover(); render(db.recentes, 'grid-recentes'); }
     }
 
     function prepararEdicao(id, tipo) {
-        const item = db[tipo][id];
-        if(!item) return;
-        selecionado = item;
-        setTipo(tipo);
+        const item = db[tipo][id]; if(!item) return; selecionado = item; setTipo(tipo);
         document.getElementById('adm-busca').value = item.title || item.name;
-        if(tipo === 'movie') {
-            document.getElementById('ed-link').value = item.link || "";
-        } else {
-            document.getElementById('ed-link').value = "";
-            document.getElementById('adm-temp').value = "";
-            document.getElementById('adm-ep').value = "";
-            let resumo = "";
-            if (item.temporadas) {
-                for (let t in item.temporadas) {
-                    for (let e in item.temporadas[t]) resumo += `T${t}:EP${e} | `;
-                }
-            }
-            alert("Cadastrados: " + (resumo || "Nenhum"));
-        }
+        if(tipo === 'movie') { document.getElementById('ed-link').value = item.link || ""; }
+        else { document.getElementById('ed-link').value = ""; document.getElementById('adm-temp').value = ""; document.getElementById('adm-ep').value = ""; }
         document.querySelector('.admin-box').scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -468,29 +490,16 @@ function tocarEp(idSerie, numTemp, numEp) {
         if (!selecionado || !selecionado.name) return;
         const t = document.getElementById('adm-temp').value;
         const e = document.getElementById('adm-ep').value;
-        if (t !== "" && e !== "") {
-            if (selecionado.temporadas && selecionado.temporadas[t] && selecionado.temporadas[t][e]) {
-                document.getElementById('ed-link').value = selecionado.temporadas[t][e];
-            } else {
-                document.getElementById('ed-link').value = "";
-            }
-        }
+        if (t !== "" && e !== "" && selecionado.temporadas && selecionado.temporadas[t] && selecionado.temporadas[t][e]) {
+            document.getElementById('ed-link').value = selecionado.temporadas[t][e];
+        } else { document.getElementById('ed-link').value = ""; }
     }
 
-    function toggleTrocarSenha() {
-        const area = document.getElementById('area-trocar-senha');
-        area.style.display = area.style.display === 'none' ? 'block' : 'none';
-    }
-
+    function toggleTrocarSenha() { const area = document.getElementById('area-trocar-senha'); area.style.display = area.style.display === 'none' ? 'block' : 'none'; }
     async function confirmarTrocaSenha() {
         const novaSenha = document.getElementById('nova-senha-input').value;
         if (novaSenha.length < 4) return alert("Mínimo 4 caracteres");
-        if (confirm("Mudar senha?")) {
-            db.config.pass = novaSenha;
-            await salvarNaNuvem();
-            alert("Senha alterada!");
-            toggleTrocarSenha();
-        }
+        if (confirm("Mudar senha?")) { db.config.pass = novaSenha; await salvarNaNuvem(); alert("Senha alterada!"); toggleTrocarSenha(); }
     }
 
     init();
