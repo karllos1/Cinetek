@@ -92,6 +92,25 @@
             .det-flex { flex-direction: column; text-align: center; }
             .det-poster-img { width: 100%; max-width: 180px; margin: 0 auto; }
         }
+        /* Estilo para o botão de remover favorito na grade */
+.card-fav-remove {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(229, 9, 20, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
     </style>
 </head>
 <body>
@@ -384,26 +403,23 @@
     const container = document.getElementById('main-grid');
     const mainTit = document.getElementById('main-tit');
     
-    // 1. Forçar a limpeza e exibição do container principal
+    // 1. Limpeza total da tela para focar nos favoritos
     container.innerHTML = "";
     mainTit.innerText = "❤️ MEUS FAVORITOS";
-    mainTit.parentElement.style.display = "block"; // Garante que a seção principal apareça
-
-    // 2. Esconder TUDO que não interessa na página de favoritos
-    document.getElementById('hero-slider').style.display = 'none';
     
+    // Esconde o slider, a seção continuar e os recentes
+    document.getElementById('hero-slider').style.display = 'none';
     const secCont = document.getElementById('section-continuar');
     if(secCont) secCont.style.display = 'none';
     
-    // Esconde o título e a grade dos "Recentes"
+    // Esconde a seção de recentes (Título e Grid)
     const recGrid = document.getElementById('grid-recentes');
     if(recGrid) {
         recGrid.style.display = 'none';
-        // Seleciona o h2 que vem antes do grid-recentes e esconde
         if(recGrid.previousElementSibling) recGrid.previousElementSibling.style.display = 'none';
     }
 
-    // 3. Renderizar ou mostrar aviso de vazio
+    // 2. Renderizar os cards de favoritos com botão de remover
     if(favs.length === 0) {
         container.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
@@ -411,17 +427,31 @@
                 <button onclick="location.reload()" style="margin-top:20px; background:var(--red); color:white; border:none; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold;">VOLTAR AO INÍCIO</button>
             </div>`;
     } else {
-        // Chamada manual da renderização para garantir que use o container certo
-        favs.forEach(m => {
+        favs.forEach((m, index) => {
             const card = document.createElement('div');
             card.className = 'card';
-            card.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${m.poster_path}"><p>${m.title || m.name}</p>`;
+            card.style.position = 'relative';
+            
+            card.innerHTML = `
+                <button class="card-fav-remove" onclick="removerDosFavoritosRapido(event, ${m.id})">✕</button>
+                <img src="https://image.tmdb.org/t/p/w500${m.poster_path}">
+                <p>${m.title || m.name}</p>
+            `;
+            
             card.onclick = () => abrirDet(m);
             container.appendChild(card);
         });
     }
-    
     window.scrollTo(0, 0);
+}
+
+// Nova função para remover sem precisar abrir o filme
+function removerDosFavoritosRapido(event, id) {
+    event.stopPropagation(); // Impede de abrir os detalhes ao clicar no X
+    let favs = JSON.parse(localStorage.getItem('cinetek_favs') || '[]');
+    favs = favs.filter(f => f.id != id);
+    localStorage.setItem('cinetek_favs', JSON.stringify(favs));
+    mostrarFavoritos(); // Atualiza a tela na hora
 }
 
     // LÓGICA CONTINUAR ASSISTINDO
