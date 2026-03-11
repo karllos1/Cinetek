@@ -512,26 +512,63 @@ function removerDosFavoritosRapido(event, id) {
     }
 
     async function salvar() {
-        const link = document.getElementById('ed-link').value; if(!selecionado || !link) return alert("Erro!");
+    try {
+        const link = document.getElementById('ed-link').value;
+        
+        // Verifica se selecionou o filme na lista de busca
+        if (!selecionado) {
+            return alert("Por favor, pesquise o filme e clique no nome dele na lista antes de publicar!");
+        }
+
+        if (!link) {
+            return alert("Insira o link do vídeo!");
+        }
+
         const tipo = selecionado.name ? 'tv' : 'movie';
-        if(!db[tipo]) db[tipo] = {};
+
+        // Garante que as pastas existam no banco de dados
+        if (!db[tipo]) db[tipo] = {};
+        if (!db.recentes) db.recentes = [];
 
         if (tipo === 'tv') {
             const temp = document.getElementById('adm-temp').value || "1";
             const ep = document.getElementById('adm-ep').value || "1";
-            if (!db.tv[selecionado.id]) db.tv[selecionado.id] = { ...selecionado, temporadas: {} };
-            if (!db.tv[selecionado.id].temporadas) db.tv[selecionado.id].temporadas = {};
-            if (!db.tv[selecionado.id].temporadas[temp]) db.tv[selecionado.id].temporadas[temp] = {};
+            
+            if (!db.tv[selecionado.id]) {
+                db.tv[selecionado.id] = { ...selecionado, temporadas: {} };
+            }
+            if (!db.tv[selecionado.id].temporadas) {
+                db.tv[selecionado.id].temporadas = {};
+            }
+            if (!db.tv[selecionado.id].temporadas[temp]) {
+                db.tv[selecionado.id].temporadas[temp] = {};
+            }
             db.tv[selecionado.id].temporadas[temp][ep] = link;
         } else {
+            // Salva Filme
             db.movie[selecionado.id] = { ...selecionado, link: link };
         }
 
-        if (!db.recentes.find(x => x.id == selecionado.id)) db.recentes.unshift(selecionado);
-        await salvarNaNuvem(); alert("Publicado!"); 
+        // Verifica se o item já está nos recentes de forma segura
+        const jaExiste = db.recentes.some(x => x.id == selecionado.id);
+        if (!jaExiste) {
+            db.recentes.unshift(selecionado);
+        }
+
+        // Envia para o Firebase
+        await salvarNaNuvem();
+        
+        alert("🚀 PUBLICADO COM SUCESSO!");
+        
+        // Limpa o campo e atualiza a lista
         document.getElementById('ed-link').value = "";
         atualizarListaRemover();
+
+    } catch (erro) {
+        console.error("Erro ao salvar:", erro);
+        alert("Ocorreu um erro interno. Verifique o console.");
     }
+}
 
     function toggleMenu(s) { document.getElementById('menu-lat').classList.toggle('active', s); }
     function fecharDet() { document.getElementById('detalhes-page').style.display = 'none'; document.getElementById('main-video').src = ""; renderContinuar(); }
